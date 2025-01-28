@@ -1,5 +1,17 @@
 { config, lib, pkgs, ... }:
 
+let
+  activationPath =
+    lib.makeBinPath [
+      pkgs.gnugrep
+      pkgs.coreutils
+    ]
+    + ":"
+    +
+      lib.replaceStrings [ "/run/current-system" ] [ "$(cat ${config.system.profile}/systemConfig)" ]
+        config.environment.systemPath;
+in
+
 {
   imports = [
     (lib.mkRemovedOptionModule [ "services" "activate-system" "enable" ] "The `activate-system` service is now always enabled as it is necessary for a working `nix-darwin` setup.")
@@ -10,7 +22,8 @@
       script = ''
         set -e
         set -o pipefail
-        export PATH="${pkgs.gnugrep}/bin:${pkgs.coreutils}/bin:@out@/sw/bin:/usr/bin:/bin:/usr/sbin:/sbin"
+
+        export PATH="${activationPath}"
 
         systemConfig=$(cat ${config.system.profile}/systemConfig)
 

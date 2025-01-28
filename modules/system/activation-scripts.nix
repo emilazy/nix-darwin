@@ -13,6 +13,14 @@ let
     mkTextDerivation = name: text: pkgs.writeScript "activate-${name}" text;
   };
 
+  activationPath =
+    lib.makeBinPath [
+      pkgs.gnugrep
+      pkgs.coreutils
+    ]
+    + ":"
+    + lib.replaceStrings [ "/run/current-system" ] [ "@out@" ] config.environment.systemPath;
+
 in
 
 {
@@ -40,7 +48,7 @@ in
       #! ${stdenv.shell}
       set -e
       set -o pipefail
-      export PATH="${pkgs.gnugrep}/bin:${pkgs.coreutils}/bin:@out@/sw/bin:/usr/bin:/bin:/usr/sbin:/sbin"
+      export PATH="${activationPath}"
 
       systemConfig=@out@
 
@@ -86,8 +94,9 @@ in
       #! ${stdenv.shell}
       set -e
       set -o pipefail
-      export PATH="${pkgs.gnugrep}/bin:${pkgs.coreutils}/bin:@out@/sw/bin:/usr/bin:/bin"
+      export PATH="${activationPath}"
 
+      # shellcheck disable=SC2034
       systemConfig=@out@
 
       _status=0
